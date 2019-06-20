@@ -1,0 +1,36 @@
+var uiType = null;
+var cachedIsLoggedIn = false;
+
+function getUIType() {
+    return uiType;
+}
+
+function setUIType(uiType) {
+    this.uiType = uiType;
+}
+
+
+function readCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+      var c = ca[i].trim();
+      if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+    }
+    return "";
+} 
+
+function isLoggedIn () {
+    var loggedInCookie = readCookie("loggedIn");
+    if (loggedInCookie != null && loggedInCookie == "true") {
+        return true;    
+    }
+    return false;
+}
+
+function isLoggedInStatusUpdated() {
+    if (cachedIsLoggedIn != isLoggedIn()) {
+        cachedIsLoggedIn = isLoggedIn();
+        return true;
+    }
+}

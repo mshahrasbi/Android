@@ -1,0 +1,228 @@
+html, body {
+    background: #F0F0F0;
+    font-family: 'Lucida grande', verdana, sans-serif;
+    margin:0px;
+}
+
+.subMenuHeader {
+	height:1.5em;
+	background-color: #5FA4D2;	
+}
+
+
+.registerTable {
+	width:1%;
+	height:1%;
+	border-width: 3px;
+	border-spacing: 5px;
+	border-style: solid;
+	border-color:#72A4D2;
+	margin-top:10px;
+	margin-left:0px; 
+	margin-right:0px;
+	padding:5px;
+}
+
+.subMenuHeaderText {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.8em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.homeTextMain {
+	font-family: Verdana;
+	color:#5257E3;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: left;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.8em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.homeText {
+	font-family: Verdana;
+	color:#3D4094;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.8em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+	padding-bottom:10px;
+}
+
+ul {
+	font-family: Verdana;
+	color:#5257E3;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: left;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.95em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+li {
+	font-family: Verdana;
+	color:#5257E3;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: left;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.85em;
+	font-style: italic; 
+	font-weight: normal;
+	margin-left:0.2em;
+}
+
+
+
+.error {
+	font-family: Verdana;
+	color: red;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.8em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.error2 {
+	font-family: Verdana;
+	color: red;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.6em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.formLabel {
+	font-family: Arial;
+	color: black;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.8em;
+	font-weight: bold;
+	margin-left:0.2em;	
+	font-style: italic; 
+	white-space:nowrap;
+}
+
+.smallText {
+	font-family: Arial;
+	color: black;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.5em;
+	font-size: 0.8em;
+	margin-left:0.2em;	
+}
+
+
+#login {
+    width: 350px;
+    margin: 10px auto;
+    text-align: center;
+}
+
+#login h1 {
+    font-weight: bold;
+    color: #111;
+}
+
+#login form {
+    background: #fff;
+    padding: 5px;
+    text-align: left;
+}
+
+#login form p {
+    margin: 3px;
+}
+
+#username-field {
+    margin-top: 10px !important;
+}
+
+#username-field label, #password-field label {
+    display: block;
+    width: 130px;
+    float: left;
+    text-align: right;
+    margin-right: 5px;
+    color: #333;
+    font-size: 15px;
+}
+
+#username-field input {
+    width: 150px;
+    font-size: 13px;
+}
+
+#password-field input {
+    width: 150px;
+    font-size: 13px;
+}
+
+#remember-field input {
+    margin-left: 200px;
+}
+
+#remember-field {
+    font-size: 12px;
+    color: #666;
+}
+
+#signin-field input {
+    margin-left: 160px;
+    margin-top: 10px;
+}
+
+#login .error, #login .success  {
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+#login .error {
+    background: #c00 !important;
+}
+
+#login .success {
+    background: #008800 !important;
+}

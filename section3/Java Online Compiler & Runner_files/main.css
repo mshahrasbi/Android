@@ -1,0 +1,143 @@
+body { 
+	margin:0px 
+}
+
+.firstrow {
+	white-space: nowrap;
+	display:inline;
+}
+
+
+.logo {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: left;
+	letter-spacing: 0;
+	line-height: 1.4em;
+	font-size: 1.3em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.logoMax {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.4em;
+	font-size: 1.8em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.publishedSmall {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.4em;
+	font-size: 0.8em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.publishedSmall2 {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: center;
+	letter-spacing: 0;
+	line-height: 1.4em;
+	font-size: 0.6em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.logoMini {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: left;
+	letter-spacing: 0;
+	line-height: 0.8em;
+	font-size: 0.9em;
+	font-weight: bold;
+	font-style: italic; 
+	margin-left:0.2em;
+}
+
+.header {
+	background-color:#3B5998;
+	height:2em
+}
+
+.headerPublished {
+	background-color:#3B5998;
+	height:2.6em
+}
+
+.headerMini {
+	background-color:#3B5998;
+	height:1.4em;
+	vertical-align:middle;
+}
+
+
+.leftHeader {
+	align:left;
+}
+
+.rightHeader {
+	align:right;
+	float:right;
+	margin-right:0.5em;
+	line-height: 1.8em;
+}
+
+.headerLink {
+	font-family: Verdana;
+	color: #ecffe0;
+	text-decoration: none;
+	word-spacing: normal;
+	text-align: left;
+	letter-spacing: 0;
+	line-height: 1.2em;
+	font-size: 0.7em;
+	font-weight: bold;
+	vertical-align:middle;
+}
+
+.myTable {
+	color: red;
+	border-width:1px;
+}
+
+.myTable TD {
+	color: red;
+	border-width:5px;
+}
+
+.pruebaDiv {
+	border-width:0px;
+	background-color:blue;
+	width:100%;
+	height:100%;
+	overflow:auto;
+	
+}
+
+
+
+

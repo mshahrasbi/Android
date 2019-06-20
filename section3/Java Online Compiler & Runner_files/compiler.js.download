@@ -1,0 +1,839 @@
+var canRunApplets = true;
+var isStopped = true;
+var runTimeStamp = null;
+var receiveDataTimeStamp = null;
+var receivedData = null;
+var appletConsoleEnabled = false;
+var diffTool = new diff_match_patch();
+var defaultAjaxRequest = new AjaxRequest();
+var reverseAjaxActive = false
+
+
+function genericErrorCallback(status, text) {
+    try {
+        var errorObject = JSON.parse(text);
+        if (errorObject.type == 'NotLoggedInException') {
+            getPopupWindowHolder().alertPopup("Message","To use this operation first login or register");
+            return;
+        }
+        if (errorObject.type == "EntityExistsException") {
+            getPopupWindowHolder().alertPopup("Message","The name entered already exists, please enter a different name");
+            return;
+        }
+        getPopupWindowHolder().alertPopup("Error","There was an error detected: " + errorObject.type);
+    } catch (error) {
+        getPopupWindowHolder().alertPopup("Error","There was en error detected");
+    }
+    /*
+    var trace = printStackTrace();
+    alert(trace.join('\n\n'));
+    throw (text);
+    */
+}
+
+function customErrorHandler(message, exception) {
+    getPopupWindowHolder().hideLoadMessage();
+    if (exception instanceof NotLoggedInException) {
+        getPopupWindowHolder().alertPopup("Message","To use this operation first login or register");
+        return;
+    }
+    if (exception instanceof EntityExistsException) {
+        getPopupWindowHolder().alertPopup("Message","The entity already exists");
+        return;
+    }
+    if (exception instanceof CompilerServiceException) {
+        getPopupWindowHolder().alertPopup("Error","Sorry, there was en error: #" + exception.errorCode.substring(34,40));
+        return;
+    }    
+    log(message + " " + JSON.stringify(exception));
+}
+
+defaultAjaxRequest.setGenericErrorCallback(genericErrorCallback);
+
+function fillCombo (combo,values) {
+    for (var i=0; i<values.length;i++) {
+        combo.options[combo.options.length] = new Option(values[i].name, values[i].id, false, false);
+    }
+}
+
+function clearCombo (combo) {
+    var elementCount = combo.options.length;
+    var options=combo.getElementsByTagName("option");
+    for (var i=0;i<elementCount;i++) {
+        combo.removeChild(options[0]);
+    }  
+}
+
+function getProperty (propertyName) {
+    var result;
+    JavaCompilerService.getProperty(propertyName,{ 
+        async: false,
+        callback: function(s) {
+        result = s;
+    }
+    });
+    return result;
+}
+
+function openExampleCodeBySelectedComboId() {
+    var id = document.getElementById('exampleCombo').options[document.getElementById('exampleCombo').selectedIndex].value;
+    getExampleCodeByIdServerAction(
+        id,
+        function(result) {
+            var exampleCode = JSON.parse(result);
+            var newFile= createFileObject (exampleCode.id,"ExampleCode",exampleCode.name,exampleCode.sourceCode);
+            editAreaLoader.openFile("code", newFile);
+        }
+    );
+}
+
+function fillExampleCodeList() {
+    getExampleCodeListServerAction(
+        function(result) {
+            fillCombo(document.getElementById("exampleCombo"),JSON.parse(result));
+        }
+    );
+}
+
+function saveSelectedFile() {
+    var file = editAreaLoader.getCurrentFile("code");
+    if (file == null) {
+        getPopupWindowHolder().alertPopup("Message","To save a file first open one in the editor using the new or open button");
+        return;
+    }
+    if (file.id <= 0 || file.type == 'ExampleCode' || file.type == 'SubmittedCode') {
+        getPopupWindowHolder().promptPopup(
+                "Save File",
+                "Please enter the name of the file",
+                compileAndSaveWithName
+        );
+    } else {
+        compileAndSave(null);
+    }
+}
+
+function saveSelectedNewFile(inputText) {
+    if (inputText == null || inputText.value.length == 0 ) {
+        getPopupWindowHolder().alertPopup("Message","Cannot save a file with empty name");
+        return;
+    }
+    var newFileName = inputText.value;
+    saveFileServerAction(
+        newFileName,
+        editAreaLoader.getValue("code"),
+        function(result) {
+            var savedCode = JSON.parse(result);
+            var code = editAreaLoader.getValue("code");
+            // FIXME misleading magic number 0 is to close the new file that has id=0
+            editAreaLoader.closeFile("code", "0"); 
+            var newFile= createFileObject (savedCode.id,"SavedCode",newFileName,code);
+            editAreaLoader.openFile("code", newFile);
+            refreshSavedCodeCombo();
+        }
+    );
+}
+
+function showLoginMessageOrErrorMessageInSavedCodeNamesCombo(status,text) {
+    var error = JSON.parse(text);
+    var savedCodeNamesCombo = document.getElementById("saveCombo");
+    if (error.type == "NotLoggedInException") {
+        clearCombo (savedCodeNamesCombo);
+        fillCombo (savedCodeNamesCombo,new Array ({name:"File - Login to enable",id:"-2"}));
+        return;
+    }
+    return genericErrorCallback(status,text);
+}
+
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
+function refreshUserArea() {
+   var panelLocation = document.getElementById("rightNavigation").contentWindow.location.href;
+   if (endsWith(panelLocation,"userArea")) {
+       document.getElementById("rightNavigation").contentWindow.location.reload();
+   }
+}
+
+function refreshSavedCodeCombo() {
+    var savedCodeNamesCombo = document.getElementById("saveCombo");
+    clearCombo (savedCodeNamesCombo);
+    fillCombo (savedCodeNamesCombo,new Array ({name:"Loading...",id:"-1"}));
+    getSavedCodeListServerAction(
+        function(result) {
+            var savedCodeNames = JSON.parse(result);
+            clearCombo (savedCodeNamesCombo);
+            if (savedCodeNames.length == 0) {
+                fillCombo (savedCodeNamesCombo,new Array ({name:"Empty",value:"-1"}));
+            } else {
+                fillCombo (savedCodeNamesCombo,savedCodeNames);
+            }
+        
+        },
+        showLoginMessageOrErrorMessageInSavedCodeNamesCombo
+    )
+}
+
+function executeFileAction() {
+    var jsFunction = document.getElementById('fileAction').options[document.getElementById('fileAction').selectedIndex].value;
+    document.getElementById('fileAction').selectedIndex = 0;
+    if (jsFunction != "-1") {
+        
+        eval(jsFunction); 
+    }
+}
+
+function openCode(id) {
+    var id = document.getElementById('saveCombo').options[document.getElementById('saveCombo').selectedIndex].value;
+    if (id == '-2') {
+        getPopupWindowHolder().alertPopup("Error","To use this operation first login or register"); 
+        return;
+    } 
+    if (id == '-1') {
+        getPopupWindowHolder().alertPopup("Error","You don't have any file to open. Please create one before"); 
+        return;
+    } 
+    getCodeByIdServerAction(
+        id,
+        function(result) {
+            var savedCode = JSON.parse(result);
+            var newFile = createFileObject (savedCode.id,"SavedCode",savedCode.name,savedCode.lastSavedCodeVersion.sourceCode);
+            editAreaLoader.openFile("code", newFile);
+        }
+    );
+}
+
+function download() {
+    var code = editAreaLoader.getValue("code");
+    if (code == null || code.length ==0) {
+        getPopupWindowHolder().alertPopup("Message","Please enter some code before downloading");
+        return;
+    }
+    var currentFile = editAreaLoader.getCurrentFile("code");
+    var currentCode = editAreaLoader.getValue("code");
+    var originalCode = editAreaLoader.getCurrentFile("code").text ;
+    var patches = diffTool.patch_toText(diffTool.patch_make(originalCode,currentCode));
+    var compilationResult;
+    JavaCompilerService.download (
+            currentFile.type, 
+            currentFile.id, 
+            "Java",
+            patches, { 
+                async: false,
+                callback: function(data) {
+                if (data == null) {
+                    getPopupWindowHolder().alertPopup("Error","There was a problem generating the JAR file. Check that the code compiles");
+                    return;
+                }
+                window.open(data);
+            }
+            }
+    ); 
+}
+
+function showCode(codeType, id, sourceCode) {
+    var newFile = createFileObject (id, codeType, codeType+': '+id, sourceCode);
+    editAreaLoader.openFile("code", newFile);
+}
+
+function showCode(codeType, id, title, sourceCode) {
+    var newFile = createFileObject (id, codeType, title, sourceCode);
+    editAreaLoader.openFile("code", newFile);
+}
+
+//FIXME remove
+function showSubmission(id,codeVar) {
+    var newFile = createFileObject (id,"SubmittedCode",'Submission: '+id,codeVar);
+    editAreaLoader.openFile("code", newFile);
+}
+
+function receiveData (data) {
+    if (data != null && data.length > 0) {
+        getPopupWindowHolder().hideLoadMessage ();
+    }
+    log("received data");
+    receiveDataTimeStamp = new Date().getTime();
+    document.getElementById("chatlog").value = document.getElementById("chatlog").value + data;
+    var objDiv = document.getElementById("chatlog");
+    objDiv.scrollTop = objDiv.scrollHeight;
+    chatLogElement = document.getElementById("chatlog");
+    chatLogElement.scrollTop = chatLogElement.scrollHeight - chatLogElement.clientHeight;
+}
+
+function receiveStopAction (logMessage, statusBoxMessage, statusBoxColor) {
+    log(logMessage);
+    document.getElementById("status").value = statusBoxMessage;
+    document.getElementById("status").style.backgroundColor = statusBoxColor;
+    isStopped = true;
+    runTimeStamp = null;
+    receiveDataTimeStamp = null;
+}
+
+function receiveStop(status) {
+    getPopupWindowHolder().hideLoadMessage ();
+    if (status == 'FinishedByLongOutput') {
+        receiveStopAction("finished by long output","Long Output","orange");
+        return;
+    }
+    if (status == 'FinishedByKill') {
+        receiveStopAction("finished by kill","Killed","orange");
+        return;
+    }
+    if (status == 'FinishedNormally') {
+        receiveStopAction("finished normally","Finished OK","orange");
+        return;
+    }
+    if (status == "FinishedByUser") {
+        receiveStopAction("finished by user stop","Stopped By User","red");
+        return;
+    }
+    receiveStopAction("finished by status:" + status,"finished by status:" + status,"red");
+}  
+
+//FIXME move to the service
+function isSwingApp() {
+    var code = editAreaLoader.getValue("code");
+    return code.indexOf("javax.swing") != -1;
+}
+
+function handleCompilationResult(result) {
+    var resultObject = document.getElementById("chatlog");
+    resultObject.value = "";
+    if (result.compilationErrorCode == "InvalidClassName") {
+        log("invalid className");
+        getPopupWindowHolder().hideLoadMessage ();
+        isStopped = true;
+        runTimeStamp = null;
+        receiveDataTimeStamp = null;
+        resultObject.value = "The provided class name is invalid";
+        document.getElementById("status").value = "ClassName Error";
+        document.getElementById("status").style.backgroundColor = "red";
+        return false;
+    }
+    if (result.compilationErrorCode == "CompilationError") {
+        log("compilation problems");
+        getPopupWindowHolder().hideLoadMessage ();
+        isStopped = true;
+        runTimeStamp = null;
+        receiveDataTimeStamp = null;
+        if (editAreaLoader.addLineNumbers != undefined) {
+            editAreaLoader.addLineNumbers();
+        } else {
+            var firstCompilationError = result.compilationErrors[0];
+            editAreaLoader.setSelectionRange("code", firstCompilationError.markStart, firstCompilationError.markEnd);
+        }
+        resultObject.value = formatCompilationErrors(result.compilationErrors);
+        document.getElementById("status").value = "Compilation Error";
+        document.getElementById("status").style.backgroundColor = "red";
+        return false;
+    }
+    document.getElementById("status").value = "Compilation Success";
+    document.getElementById("status").style.backgroundColor = "green";
+    return true;
+}
+
+function formatCompilationErrors(compilationErrors) {
+    var result = "Compilation Errors Detected\n\n";
+    for (i=0; i<compilationErrors.length;i++) {
+        result += "Line: " + compilationErrors[i].line + '\n';
+        result += compilationErrors[i].message + '\n\n';
+    }
+    return result;
+}
+    
+function runMini() {
+    switchView("console");
+    document.getElementById("switchViewSelect").value = "console";
+    run();
+}
+
+function runOk(runResult) {
+    var currentFile = editAreaLoader.getCurrentFile("code");
+    var currentCode = editAreaLoader.getValue("code");
+    currentFile.webCode = runResult;
+    currentFile.id = currentFile.webCode.id;
+    currentFile.type = currentFile.webCode.codeType;
+    currentFile.originalText = currentCode;
+    if (appletConsoleEnabled) {
+        if (currentFile.webCode.executorResult instanceof JavaAppletExecutorResult) {
+            document.getElementById("outputTabber").tabber.tabShow(1); swap(currentFile.webCode.executorResult.appletUrl,600,400);
+            getPopupWindowHolder().hideLoadMessage();
+        }
+        else {
+            handleCompilationResult(currentFile.webCode.compilationResult);
+            //FIXME relocate this code
+            if (currentFile.webCode.executorResult != null) {
+                document.getElementById("status").value = "Running";
+                document.getElementById("status").style.backgroundColor = "green";
+            }    
+            document.getElementById("outputTabber").tabber.tabShow(0); 
+        }
+    }
+    return currentFile.id;
+}
+
+function activateAjax() {
+	if (!reverseAjaxActive) {
+	  reverseAjaxActive=true;
+	  dwr.engine.setActiveReverseAjax(true);
+	}
+}
+
+function run() {
+	activateAjax();
+    var currentFile = editAreaLoader.getCurrentFile("code");
+    var currentCode = editAreaLoader.getValue("code");
+    if (currentCode == null || currentCode.length == 0 ) {
+        getPopupWindowHolder().alertPopup("Error","To run a program you need to open a file in the editor and enter some code");
+        return;
+    }
+    getPopupWindowHolder().showLoadMessage();
+    log("run started");
+    document.getElementById("chatlog").value = "";
+    runTimeStamp = new Date().getTime();
+    isStopped=false;
+    if (isSwingApp()) {
+        getPopupWindowHolder().alertPopup("Error","This version does not support running Swing Applications'");
+        return;
+    }
+    var currentCode = editAreaLoader.getValue("code");
+    var originalCode = currentFile.originalText ;
+    var patches = convertPatchesToText(diffTool.patch_make(originalCode,currentCode));
+    var webCode;
+    JavaCompilerService.run(
+            currentFile.type, 
+            currentFile.id, 
+            "Java",
+            "Automatic",
+            document.getElementById("args").value, 
+            patches, 
+            { 
+                callback: runOk
+            }
+    );
+    log("code sent");
+}
+
+function compileAndSaveWithName(inputText) {
+    if (inputText == null || inputText.value.length == 0 ) {
+        getPopupWindowHolder().alertPopup("Message","Cannot save a file with empty name");
+        return;
+    }
+    var newTitle = inputText.value;
+    compileAndSave(newTitle);
+    refreshSavedCodeCombo();
+    refreshUserArea();
+}
+
+function getUrl() {
+    var currentFile = editAreaLoader.getCurrentFile("code");
+    var currentCode = editAreaLoader.getValue("code");
+    if (currentCode == null || currentCode.length == 0 ) {
+        getPopupWindowHolder().alertPopup("Error","To get the url of a code first you need to open one in the editor and type some code");
+        return;
+    }
+    var originalCode = currentFile.originalText ;
+    var patches = convertPatchesToText(diffTool.patch_make(originalCode,currentCode));
+    var webCode;
+    JavaCompilerService.compile(
+        currentFile.type, 
+        currentFile.id, 
+        "Java",
+        patches, 
+        { 
+            callback: function(webCode) {
+               var url = document.URL;
+               url = url.substring(0,url.indexOf("/",8))+"/"+webCode.codeType+"/"+webCode.id;
+               currentFile.webCode = webCode;
+               handleCompilationResult(currentFile.webCode.compilationResult)
+               currentFile.id = webCode.id;
+               currentFile.type = webCode.codeType;
+               currentFile.originalText = currentCode;
+               getPopupWindowHolder().alertPopup("Url to Access",url);
+            }
+        }
+    );
+}
+
+function compileAndSave(newTitle) {
+    var currentFile = editAreaLoader.getCurrentFile("code");
+    var currentCode = editAreaLoader.getValue("code");
+    var originalCode = currentFile.originalText ;
+    var patches = convertPatchesToText(diffTool.patch_make(originalCode,currentCode));
+    var webCode;
+    JavaCompilerService.save(
+        currentFile.type, 
+        currentFile.id, 
+        newTitle,
+        "Java",
+        patches, 
+        { 
+            callback: function(webCode) {
+                currentFile.webCode = webCode;
+                if (handleCompilationResult(currentFile.webCode.compilationResult)) {
+                    getPopupWindowHolder().alertPopup("Message","code saved and compiled successfully");
+                } else {
+                    getPopupWindowHolder().alertPopup("Message","code saved, but there are compilation errors");
+                }
+                currentFile.id = currentFile.webCode.id;
+                currentFile.type = currentFile.webCode.codeType;
+                currentFile.originalText = currentCode;
+                if (newTitle != null) {
+                    // FIXME misleading magic number 0 is to close the new file that has id=0
+                    editAreaLoader.closeFile("code", "0"); 
+                    var newFile= createFileObject (currentFile.id,"SavedCode",newTitle,currentCode);
+                    newFile.webCode = currentFile.webCode;
+                    editAreaLoader.openFile("code", newFile);
+                    refreshSavedCodeCombo();
+                    refreshUserArea();
+                }
+            }
+        }
+    );
+}
+
+function stop() {
+    var currentCode = editAreaLoader.getValue("code");
+    if (currentCode == null || currentCode.length == 0 ) {
+        getPopupWindowHolder().alertPopup("Error","To stop a program you need to open a file in the editor and enter some code");
+        return;
+    }
+    if (editAreaLoader.getCurrentFile("code").webCode == null) {
+        getPopupWindowHolder().alertPopup("Error","The program is not running");
+        return;
+    }
+    log("stop sent");
+    JavaCompilerService.stop(editAreaLoader.getCurrentFile("code").webCode.executorResult.consoleActiveExecutorId,{callback: function(s) {log("stop received");}});
+}
+
+function handleEnter(inField, e) {
+    var charCode;
+    var message;
+    if(e) {
+        if (e.which) {
+            charCode = e.which;
+        }
+        if (e.keyCode) {
+            charCode = e.keyCode;
+        }    
+    } else if(window.event){
+        e = window.event;
+        charCode = e.keyCode;
+    }
+    if(charCode == 13) {
+        var chatlog = document.getElementById("chatlog").value;
+        var chatLogIndex = chatlog.lastIndexOf('\n');
+        log("before writing message");
+        JavaCompilerService.write(editAreaLoader.getCurrentFile("code").webCode.executorResult.consoleActiveExecutorId,lastUserText);
+        log("after writing message");
+        lastUserText = "";
+    } else {
+        if (charCode > 31 || charCode == 20) {
+            lastUserText = lastUserText + String.fromCharCode(charCode);
+        }
+        if (charCode == 8) {
+            lastUserText = lastUserText.substring(0,lastUserText.length -1);
+        }       
+    }
+}   
+
+function newFile() {
+    if (editAreaLoader.getFile("code","0") != undefined ) {
+        getPopupWindowHolder().alertPopup("Message","You have already one untitled file unsaved. Sorry, you can't create two unsaved files");
+    } else {
+        var newFile = createFileObject ('0',"SubmittedCode",'Untitled (not saved)','');
+        editAreaLoader.openFile("code", newFile);
+    }
+}
+
+function remove(confirm) {
+    var file = editAreaLoader.getCurrentFile("code");
+    if (file.id ==0) {
+        getPopupWindowHolder().alertPopup("Error","To delete a file you need to save it first");
+    }  
+    if (file.type == "exampleCode") {
+        getPopupWindowHolder().alertPopup("Error","Examples cannot be deleted. You can save this file with other names using the Save function");
+        return;
+    }
+    if (file == null) {
+        getPopupWindowHolder().alertPopup("Message","To remove a file first open one in the editor using the new or open button");
+        return;
+    }
+    if (!confirm) {
+        getPopupWindowHolder().confirmPopup("Delete Confirmation",
+                "Are you sure that you want to delete the program: " +file.title + "?",
+                function () {remove (true);},    
+                function () {});
+        return;
+    }
+    var code = editAreaLoader.getValue("code");
+    deleteFileServerAction(
+        file.id,
+        function() {
+            editAreaLoader.closeFile("code", file.id);
+            refreshSavedCodeCombo();
+            refreshUserArea();
+        }
+    )
+}
+
+function publish(inputText) {
+    var file = editAreaLoader.getCurrentFile("code");
+    if (file.id ==0) {
+        getPopupWindowHolder().alertPopup("Error","To publish a code you need to save it first");
+        return;
+    }    
+    if (file.type == "ExampleCode") {
+        getPopupWindowHolder().alertPopup("Error","Examples codes cannot be published, save your version with a name first");
+        return;
+    }
+    if (file.type == "SubmittedCode") {
+        getPopupWindowHolder().alertPopup("Error","To publish a code you need to save it first");
+        return;
+    }
+    if (file.id.length == 0) {
+        getPopupWindowHolder().alertPopup("Message","To publish a file you need to open it in edit mode");
+        return;
+    }
+    document.getElementById("rightNavigation").contentWindow.location.href="/publishCode/new/"+file.id;
+}
+
+function rename(inputText) {
+    var file = editAreaLoader.getCurrentFile("code");
+    if (file.id ==0) {
+        getPopupWindowHolder().alertPopup("Error","To rename a file you need to save it first");
+    }    
+    if (file.type == "exampleCode") {
+        getPopupWindowHolder().alertPopup("Error","Examples cannot be renamed. You can save this file with other names using the Save function");
+        return;
+    }
+    if (file.id.length == 0) {
+        getPopupWindowHolder().alertPopup("Message","To rename a file you need to open it in edit mode");
+        return;
+    }
+    if (inputText == null || inputText.value.length == 0) {
+        getPopupWindowHolder().promptPopup(
+            "Rename File",
+            "Please enter the new name of the file",
+            rename,    
+            function (){}
+        );
+        return;
+    }
+    var newFileName = inputText.value;
+    var code = editAreaLoader.getValue("code");
+    renameFileServerAction(
+        file.id, 
+        newFileName, 
+        function() {
+            editAreaLoader.closeFile("code", file.id);
+            var newFile = createFileObject (file.id,null,newFileName,code);
+            editAreaLoader.openFile("code", newFile);
+            refreshSavedCodeCombo();
+            refreshUserArea();
+        }
+    );    
+}
+
+function createFileObject (id,type,name,code) {
+    var file = {id:id, type:type, title: name, text: code, originalText:code, syntax: 'java'};
+    return file;
+}
+
+function checkCanRunApplets () {
+    if (!canRunApplets) {
+        var info = PluginDetect.getInfo('Java','/dwr/third-party/plugindetect/getJavaInfo.jar',[3,3,3]);
+        if (info.appletTag == 1) {
+            canRunApplets = true;
+        }
+    }
+    return canRunApplets;
+}
+
+function swap(src,width,height){
+    if (!checkCanRunApplets()) {
+        getPopupWindowHolder().alertPopup("Message","Your browswer does not support running applets. Please install java or change your browser");
+        return;
+    }
+    if (document.getElementById("iframeContainer") != null) {
+        document.getElementById('gamebox').removeChild(document.getElementById('iframeContainer'));
+    }
+    var a=document.createElement('iframe');
+    a.setAttribute('src',src);
+    a.setAttribute('width',width);
+    a.setAttribute('height',height);
+    a.setAttribute('id','iframeContainer');
+    a.style.border='0';
+    a.style.overflow='hidden';
+    document.getElementById('gamebox').appendChild(a);
+}
+
+function switchView(id) {
+    if (id == 'code') {
+        document.getElementById("codeContainer").style.display = "block";
+        document.getElementById("resultContainer").style.display = "none";
+        document.getElementById("logContainer").style.display = "none";
+    }
+    if (id == 'console') {
+        document.getElementById("codeContainer").style.display = "none";
+        document.getElementById("resultContainer").style.display = "block";
+        document.getElementById("logContainer").style.display = "none";
+    }
+    if (id == 'applet') {
+        document.getElementById("codeContainer").style.display = "none";
+        document.getElementById("resultContainer").style.display = "none";
+        document.getElementById("logContainer").style.display = "block";
+    }
+    if (id == 'log') {
+        document.getElementById("codeContainer").style.display = "none";
+        document.getElementById("resultContainer").style.display = "none";
+        document.getElementById("logContainer").style.display = "block";
+    }
+}
+
+function pad(number) {
+    number = number.toString();
+    if (number.length ==1) {
+        return "0"+number;
+    }
+    return number;
+}
+
+function log(message) {
+    date = new Date();
+    dateStr = pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds());
+    document.getElementById("logConsole").value =  document.getElementById("logConsole").value + dateStr + " " + message + '\n';
+}
+
+function addLineNumbersToText(text) {
+    var lines = text.split(/\r?\n|\r/);
+    var result ="";
+    var leftSpaceSize = lines.length.toString().length +1 ;
+    for (i=0;i<lines.length;i++) {
+        var space = leftSpaceSize - i.toString().length;
+        result += (i+1) + Array(space).join(" ") + " | " + lines[i] + '\n';
+    }
+    return result;
+}
+
+function removeLineNumbersFromText(text) {
+    var lines = text.split(/\r?\n|\r/);
+    var result = "";
+    var regex = new RegExp("^((\\d+)(\\s+))\\|\\s", "g");
+    for (i=0;i<lines.length;i++) {
+        result += lines[i].replace(regex,"") + '\n';
+    }
+    return result;
+}
+
+function convertPatchesToText(patches) {
+  var result = "";
+  for (var x = 0; x < patches.length; x++) {
+    result += patches[x];
+  }
+  return result;
+};
+
+function useLoadingMessage(message) {
+    dwr.engine.setPreHook(function() {
+        addLoadMessage ();
+    });
+
+    dwr.engine.setPostHook(function() {
+        removeLoadMessage ();
+    });
+}
+
+function saveFileServerAction(newName, sourceCode, okCallback, failCallback) {
+    var params = {"savedCode.name": newName,"savedCode.sourceCode":sourceCode };
+    defaultAjaxRequest.ajaxPOST(
+        "/saveCode",
+        params,
+        okCallback,
+        failCallback
+    );
+}
+
+function renameFileServerAction(id, name, okCallback, failCallback) {
+    defaultAjaxRequest.ajaxPOST(
+        "/renameCode.json",
+        {"savedCode.id": id,"savedCode.name": name},
+        okCallback,
+        failCallback
+    );
+}
+
+//FIXME this method is duplicated in showSubmissionsMini.js
+function getSubmissionSourceCode(id) {
+    url = "/getSubmission.json";
+    postParams = {"submissionId":id};
+    return JSON.parse(defaultAjaxRequest.ajaxPOST (url,postParams,null,null,false)).lastSubmittedCodeVersion.sourceCode;
+}
+
+function deleteFileServerAction(id, okCallback, failCallback) {
+    var params = {"savedCode.id": id};
+    defaultAjaxRequest.ajaxPOST(
+        "/deleteCode.json",
+        params,
+        okCallback,
+        failCallback
+    );
+}
+
+function getCodeByIdServerAction(id, okCallback, failCallback) {
+    defaultAjaxRequest.ajaxGET(
+        "/openCode.json/"+id,
+        okCallback,
+        failCallback
+    );
+}
+
+//FIXME unify with getCode
+function getExampleCodeByIdServerAction(id, okCallback, failCallback) {
+    defaultAjaxRequest.ajaxGET(
+        "/getCode/exampleCode/"+id,
+        okCallback,
+        failCallback
+    );
+}
+
+function getCode(codeType, id, okCallback, failCallback) {
+    defaultAjaxRequest.ajaxGET(
+        "/getCode/"+codeType+"/"+id,
+        okCallback,
+        failCallback
+    );
+}
+
+function getExampleCodeListServerAction(okCallback, failCallback) {
+    defaultAjaxRequest.ajaxGET(
+        "/getExampleCodeList",
+        okCallback,
+        failCallback
+    );
+}
+
+function getSavedCodeListServerAction(okCallback, failCallback) {
+    defaultAjaxRequest.ajaxGET(
+        "/getSavedCodeList.json",
+        okCallback,
+        failCallback
+    );
+}
+
+//FIXME Find a better solution to maintain miniVersion vs standardVersion
+function getPopupWindowHolder() {
+    if (this.divPopupsEnabled != undefined) {
+        return this;
+    }
+    if (parent.divPopupsEnabled != undefined) {
+        return parent;
+    }
+    throw "popUp code Not Found";
+}
+
+function refreshSavedComboForStandardVersionIfNeeded() {
+    if (isLoggedInStatusUpdated()) {
+        refreshSavedCodeCombo();
+    }
+}

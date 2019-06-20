@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!-- saved from url=(0022)http://www.browxy.com/ -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>EditArea</title>
+	
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7">
+	<link href="./edit_area.css" rel="stylesheet" type="text/css">
+	<script language="javascript" type="text/javascript" src="./edit_area.js.download"></script><script language="javascript" type="text/javascript" src="./manage_area.js.download"></script><script language="javascript" type="text/javascript" src="./edit_area_functions.js.download"></script><script language="javascript" type="text/javascript" src="./keyboard.js.download"></script><script language="javascript" type="text/javascript" src="./search_replace.js.download"></script><script language="javascript" type="text/javascript" src="./highlight.js.download"></script><script language="javascript" type="text/javascript" src="./regexp.js.download"></script>
+<style type="text/css" media="all">.java .comments span{color: #AAAAAA;}
+.java .comments{color: #AAAAAA;}
+.java .quotesmarks span{color: #6381F8;}
+.java .quotesmarks{color: #6381F8;}
+.java .constants span{color: #EE0000;}
+.java .constants{color: #EE0000;}
+.java .types span{color: #0000EE;}
+.java .types{color: #0000EE;}
+.java .statements span{color: #60CA00;}
+.java .statements{color: #60CA00;}
+.java .keywords span{color: #48BDDF;}
+.java .keywords{color: #48BDDF;}
+.java .operators span{color: #FF00FF;}
+.java .operators{color: #FF00FF;}
+.java .delimiters span{color: #0038E1;}
+.java .delimiters{color: #0038E1;}
+.java .precompiler span{color: #009900;}
+.java .precompiler{color: #009900;}
+.java .precompilerstring span{color: #994400;}
+.java .precompilerstring{color: #994400;}
+</style><style type="text/css" media="all">pre{font-family:monospace}</style><style type="text/css" media="all">pre{font-family:monospace}</style><style type="text/css" media="all">pre{font-family:monospace}</style><style type="text/css" media="all">pre{font-family:monospace}</style></head>
+<body>
+	<div id="editor">
+		<div class="area_toolbar" id="toolbar_1"><a id="a_search" href="javascript:editArea.execCommand(&#39;show_search&#39;)" onclick="editArea.execCommand(&#39;show_search&#39;);return false;" onmousedown="return false;" target="_self" filespecific="no"><img id="search" src="./search.gif" title="search" width="20" height="20" class="editAreaButtonNormal" onmouseover="editArea.switchClass(this,&#39;editAreaButtonOver&#39;);" onmouseout="editArea.restoreClass(this);" onmousedown="editArea.restoreAndSwitchClass(this,&#39;editAreaButtonDown&#39;);"></a><a id="a_go_to_line" href="javascript:editArea.execCommand(&#39;go_to_line&#39;)" onclick="editArea.execCommand(&#39;go_to_line&#39;);return false;" onmousedown="return false;" target="_self" filespecific="no"><img id="go_to_line" src="./go_to_line.gif" title="go to line" width="20" height="20" class="editAreaButtonNormal" onmouseover="editArea.switchClass(this,&#39;editAreaButtonOver&#39;);" onmouseout="editArea.restoreClass(this);" onmousedown="editArea.restoreAndSwitchClass(this,&#39;editAreaButtonDown&#39;);"></a><img src="./spacer.gif" width="1" height="15" class="editAreaSeparatorLine"><a id="a_undo" href="javascript:editArea.execCommand(&#39;undo&#39;)" onclick="editArea.execCommand(&#39;undo&#39;);return false;" onmousedown="return false;" target="_self" filespecific="yes"><img id="undo" src="./undo.gif" title="undo" width="20" height="20" class="editAreaButtonNormal" onmouseover="editArea.switchClass(this,&#39;editAreaButtonOver&#39;);" onmouseout="editArea.restoreClass(this);" onmousedown="editArea.restoreAndSwitchClass(this,&#39;editAreaButtonDown&#39;);"></a><a id="a_redo" href="javascript:editArea.execCommand(&#39;redo&#39;)" onclick="editArea.execCommand(&#39;redo&#39;);return false;" onmousedown="return false;" target="_self" filespecific="yes"><img id="redo" src="./redo.gif" title="redo" width="20" height="20" class="editAreaButtonDisabled" onmouseover="editArea.switchClass(this,&#39;editAreaButtonOver&#39;);" onmouseout="editArea.restoreClass(this);" onmousedown="editArea.restoreAndSwitchClass(this,&#39;editAreaButtonDown&#39;);"></a><img src="./spacer.gif" width="1" height="15" class="editAreaSeparatorLine"><select id="area_font_size" onchange="javascript:editArea.execCommand(&quot;change_font_size&quot;)" filespecific="yes"><option value="-1">--Font size--</option><option value="8">8 pt</option><option value="9">9 pt</option><option value="10">10 pt</option><option value="11">11 pt</option><option value="12">12 pt</option><option value="14">14 pt</option></select></div>
+		<div class="area_toolbar" id="tab_browsing_area" style="display: block; height: 19px;"><ul id="tab_browsing_list" class="menu"> <li class=""> </li> <li id="tab_file_0" class=""><a onclick="javascript:editArea.execCommand(&#39;switch_to_file&#39;, editArea.filesIdAssoc[&#39;tab_file_0&#39;]);" selec="none" class="edited"><b><span><strong class="edited">*</strong>Untitled (not saved)<img src="./close.gif" title="Close file" onclick="editArea.execCommand(&#39;close_file&#39;, editArea.filesIdAssoc[&#39;tab_file_0&#39;]);return false;" class="hidden" onmouseover="this.className=&#39;&#39;" onmouseout="this.className=&#39;hidden&#39;"></span></b></a></li><li id="tab_file_1" class="selected"><a onclick="javascript:editArea.execCommand(&#39;switch_to_file&#39;, editArea.filesIdAssoc[&#39;tab_file_1&#39;]);" selec="none" class="edited"><b><span><strong class="edited">*</strong>Hello World !<img src="./close.gif" title="Close file" onclick="editArea.execCommand(&#39;close_file&#39;, editArea.filesIdAssoc[&#39;tab_file_1&#39;]);return false;" class="hidden" onmouseover="this.className=&#39;&#39;" onmouseout="this.className=&#39;hidden&#39;"></span></b></a></li></ul></div>
+		<div id="result" style="height: 271px; width: 1073px;" class="">
+			<div id="no_file_selected" style="display: none;"></div>
+			<div id="container" style="width: 1006px; height: 146px;" class="">
+				<div id="cursor_pos" class="edit_area_cursor" style="display: block; font-family: monospace; font-size: 10pt; line-height: 16px; visibility: hidden; top: 80px; left: 316px;">)</div>
+				<div id="end_bracket" class="edit_area_cursor" style="display: block; font-family: monospace; font-size: 10pt; line-height: 16px; visibility: hidden; top: 80px; left: 294px;">(</div>
+				<div id="selection_field" class=" show_colors" style="display: block; font-family: monospace; font-size: 10pt; line-height: 16px; top: 80px; width: 1006px;"><span>		System.out.println("Hi Mo</span><strong></strong><span>");
+</span></div>
+				<div id="line_number" selec="none" style="font-family: monospace; font-size: 10pt; line-height: 16px;"><div id="line_1" style="height: 16px;">1</div><div id="line_2" style="height: 16px;">2</div><div id="line_3" style="height: 16px;">3</div><div id="line_4" style="height: 16px;">4</div><div id="line_5" style="height: 16px;">5</div><div id="line_6" style="height: 16px;">6</div><div id="line_7">7</div><div id="line_8">8</div><div id="line_9">9</div><div id="line_10">10</div><div id="line_11">11</div><div id="line_12">12</div><div id="line_13">13</div><div id="line_14">14</div><div id="line_15">15</div><div id="line_16">16</div><div id="line_17">17</div><div id="line_18">18</div><div id="line_19">19</div><div id="line_20">20</div><div id="line_21">21</div><div id="line_22">22</div><div id="line_23">23</div><div id="line_24">24</div><div id="line_25">25</div><div id="line_26">26</div><div id="line_27">27</div><div id="line_28">28</div><div id="line_29">29</div><div id="line_30">30</div><div id="line_31">31</div><div id="line_32">32</div><div id="line_33">33</div><div id="line_34">34</div><div id="line_35">35</div><div id="line_36">36</div><div id="line_37">37</div><div id="line_38">38</div><div id="line_39">39</div><div id="line_40">40</div><div id="line_41">41</div><div id="line_42">42</div><div id="line_43">43</div><div id="line_44">44</div><div id="line_45">45</div><div id="line_46">46</div><div id="line_47">47</div><div id="line_48">48</div><div id="line_49">49</div><div id="line_50">50</div><div id="line_51">51</div><div id="line_52">52</div><div id="line_53">53</div><div id="line_54">54</div><div id="line_55">55</div><div id="line_56">56</div><div id="line_57">57</div><div id="line_58">58</div><div id="line_59">59</div><div id="line_60">60</div><div id="line_61">61</div><div id="line_62">62</div><div id="line_63">63</div><div id="line_64">64</div><div id="line_65">65</div><div id="line_66">66</div><div id="line_67">67</div><div id="line_68">68</div><div id="line_69">69</div><div id="line_70">70</div><div id="line_71">71</div><div id="line_72">72</div><div id="line_73">73</div><div id="line_74">74</div><div id="line_75">75</div><div id="line_76">76</div><div id="line_77">77</div><div id="line_78">78</div><div id="line_79">79</div><div id="line_80">80</div><div id="line_81">81</div><div id="line_82">82</div><div id="line_83">83</div><div id="line_84">84</div><div id="line_85">85</div><div id="line_86">86</div><div id="line_87">87</div><div id="line_88">88</div><div id="line_89">89</div><div id="line_90">90</div><div id="line_91">91</div><div id="line_92">92</div><div id="line_93">93</div><div id="line_94">94</div><div id="line_95">95</div><div id="line_96">96</div><div id="line_97">97</div><div id="line_98">98</div><div id="line_99">99</div><div id="line_100">100</div></div>
+				<div id="content_highlight" style="width: 1006px; height: 144px; visibility: visible; font-family: monospace; font-size: 10pt; line-height: 16px;"><span class="java">
+<span class="types">public</span> <span class="types">class</span> HiMo <span class="delimiters">{</span>
+
+	<span class="types">public</span> <span class="types">static</span> <span class="types">void</span> main<span class="delimiters">(</span><span class="types">String</span><span class="delimiters">[</span><span class="delimiters">]</span> args<span class="delimiters">)</span> <span class="delimiters">{</span>
+	
+		System.out.println<span class="delimiters">(</span><span class="quotesmarks">"Hi Mo"</span><span class="delimiters">)</span>;
+	<span class="delimiters">}</span>
+<span class="delimiters">}</span>
+</span></div>
+				<div id="test_font_size" style="font-family: monospace; font-size: 10pt; width: 1006px;"><span id="test_font_size_inner">		System.out.println("Hi Mo</span><span id="endTestFont">");</span></div>
+				<div id="selection_field_text" style="font-family: monospace; font-size: 10pt; line-height: 16px; top: 80px; width: 1006px;"><span>		System.out.println("Hi Mo</span><strong></strong><span>");
+</span></div>
+				<textarea id="textarea" wrap="off" onchange="editArea.execCommand(&quot;onchange&quot;);" onfocus="javascript:editArea.textareaFocused=true;" onblur="javascript:editArea.textareaFocused=false;" style="width: 1006px; height: 144px; font-family: monospace; font-size: 10pt; line-height: 16px;" classname="null hidden" class="null hidden" spellcheck="false">				</textarea>
+				
+			</div>
+		</div>
+		<div class="area_toolbar" id="toolbar_2">
+			<table class="statusbar" cellspacing="0" cellpadding="0">
+				<tbody><tr>
+					<td class="total" selec="none">Position:</td>
+					<td class="infos" selec="none">
+						Ln <span id="linePos">6</span>, Ch <span id="currPos">28</span>
+					</td>
+					<td class="total" selec="none">Total:</td>
+					<td class="infos" selec="none">
+						Ln <span id="nbLine">9</span>, Ch <span id="nbChar">94</span>
+					</td>
+					<td class="resize">
+						<span id="resize_area"><img src="./statusbar_resize.gif" alt="resize" selec="none"></span>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+	</div>
+	<div id="processing" style="display: none; width: 1073px; height: 335px;">
+		<div id="processing_text">
+			Processing...
+		</div>
+	</div>
+
+	<div id="area_search_replace" class="editarea_popup">
+		<table cellspacing="2" cellpadding="0" style="width: 100%">
+			<tbody><tr>
+				<td selec="none">search</td>
+				<td><input type="text" id="area_search"></td>
+				<td id="close_area_search_replace">
+					<a onclick="Javascript:editArea.execCommand(&quot;hidden_search&quot;)"><img selec="none" src="./close.gif" alt="close popup" title="close popup"></a><br>
+			</td></tr><tr>
+				<td selec="none">replace</td>
+				<td><input type="text" id="area_replace"></td>
+				<td><img id="move_area_search_replace" onmousedown="return parent.start_move_element(event,&quot;area_search_replace&quot;, parent.frames[&quot;frame_&quot;+editArea.id]);" src="./move.gif" alt="move search popup" title="move search popup"></td>
+			</tr>
+		</tbody></table>
+		<div class="button">
+			<input type="checkbox" id="area_search_match_case"><label for="area_search_match_case" selec="none">match case</label>
+			<input type="checkbox" id="area_search_reg_exp"><label for="area_search_reg_exp" selec="none">regular expressions</label>
+			<br>
+			<a onclick="Javascript:editArea.execCommand(&quot;area_search&quot;)" selec="none">find next</a>
+			<a onclick="Javascript:editArea.execCommand(&quot;area_replace&quot;)" selec="none">replace</a>
+			<a onclick="Javascript:editArea.execCommand(&quot;area_replace_all&quot;)" selec="none">replace all</a><br>
+		</div>
+		<div id="area_search_msg" selec="none"></div>
+	</div>
+	<div id="edit_area_help" class="editarea_popup">
+		<div class="close_popup">
+			<a onclick="Javascript:editArea.execCommand(&quot;close_all_inline_popup&quot;)"><img src="./close.gif" alt="close popup" title="close popup"></a>
+		</div>
+		<div><h2>Editarea 0.8.2</h2><br>
+			<h3>Shortcuts:</h3>
+				Tab: add tabulation to text<br>
+				Shift+Tab: remove tabulation to text<br>
+				Ctrl+f: search next / open search area<br>
+				Ctrl+r: replace / open search area<br>
+				Ctrl+h: toggle syntax highlight on/off<br>
+				Ctrl+g: go to line<br>
+				Ctrl+z: undo<br>
+				Ctrl+y: redo<br>
+				Ctrl+e: about<br>
+				Ctrl+q, Esc: close popup<br>
+				Accesskey E: Toggle editor<br>
+			<br>
+			<em>Notice: syntax highlight function is only for small text</em>
+			<br><div class="copyright">© Christophe Dolivet 2007-2010</div>
+		</div>
+	</div>
+
+
+</body></html>

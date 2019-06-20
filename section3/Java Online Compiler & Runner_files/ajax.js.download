@@ -1,0 +1,108 @@
+function AjaxRequest(genericErrorCallback) {
+    this.genericErrorCallback = genericErrorCallback;
+}
+
+AjaxRequest.prototype.setGenericErrorCallback = function (genericErrorCallback) {
+    this.genericErrorCallback = genericErrorCallback;
+}
+
+AjaxRequest.prototype.getGenericErrorCallback = function () {
+    return this.genericErrorCallback;
+}
+
+AjaxRequest.prototype.createXmlHttpRequest = function () {
+    var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"];
+    if (window.ActiveXObject) {
+        for (var i=0; i<activexmodes.length; i++) {
+            try {
+                return new ActiveXObject(activexmodes[i]);
+            } catch(e) { }
+        }
+    } else if (window.XMLHttpRequest) {
+        return new XMLHttpRequest();
+    } else {
+        return false;
+    }
+}
+
+AjaxRequest.prototype.setHandlerToRequest = function (request,onLoadCallback,onErrorCallback) {
+    var that = this;
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            if (request.status == 200) {
+                if (onLoadCallback != null) {
+                    onLoadCallback(request.responseText);
+                }
+            } else {
+                if (onErrorCallback != null) {
+                  onErrorCallback(request.status, request.responseText);
+                } else {
+                    if (that.genericErrorCallback != null) {
+                        that.genericErrorCallback(request.status,request.responseText);
+                    }
+                }
+            }
+        }
+    };
+}
+
+AjaxRequest.prototype.ajaxGET = function (url,onLoadCallback,onErrorCallback,isAsync) {
+    if (typeof isAsync == "undefined") {
+        isAsync = true;
+    }
+    var request = this.createXmlHttpRequest();
+    request.open("GET",url,isAsync);
+    if (isAsync) {
+        this.setHandlerToRequest(request,onLoadCallback,onErrorCallback);
+        request.send(null);
+    } else {
+        request.send(null);
+        if (request.status == 200) {
+            return request.responseText;
+        } else {
+            if (onErrorCallback != null) {
+                return onErrorCallback(request.status,request.responseText);
+            } else {
+                if (this.genericErrorCallback != null) {
+                    this.genericErrorCallback(request.status,request.responseText);
+                }
+            }    
+        }    
+    }
+}
+
+AjaxRequest.prototype.ajaxPOST = function (url,params,onLoadCallback,onErrorCallback,isAsync) {
+    if (typeof isAsync == "undefined") {
+        isAsync = true;
+    }
+    var request = this.createXmlHttpRequest();
+    request.open("POST",url,isAsync);
+    request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    request.setRequestHeader("Content-length", params.length);
+    request.setRequestHeader("Connection", "close");
+    if (isAsync) {
+        this.setHandlerToRequest(request,onLoadCallback,onErrorCallback);
+        request.send(this.convertObjectToPostParams(params));
+    } else {
+        request.send(this.convertObjectToPostParams(params));
+        if (request.status == 200) {
+            return request.responseText;
+        } else {
+            if (onErrorCallback != null) {
+                return onErrorCallback(request.status,request.responseText);
+            } else {
+                if (this.genericErrorCallback != null) {
+                    this.genericErrorCallback(request.status,request.responseText);
+                }
+            }    
+        }
+    }
+}
+
+AjaxRequest.prototype.convertObjectToPostParams = function (parameterObject) {
+    var parameterString = "";
+    for(key in parameterObject) {
+        parameterString += encodeURIComponent(key)+ "=" + encodeURIComponent(parameterObject[key])+"&";
+    }
+    return parameterString;
+}
