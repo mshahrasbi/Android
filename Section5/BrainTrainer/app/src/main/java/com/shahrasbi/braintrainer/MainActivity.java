@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
 
         newQuestion();
         playAgainButton.setVisibility(View.INVISIBLE);
+        resultTextView.setText("");
         new CountDownTimer(30100, 1000) {
 
             @Override
