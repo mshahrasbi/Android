@@ -133,12 +133,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         else {
             if (MainActivity.locations.size() > 0){
-                //Location placeLocation = new Location(LocationManager.GPS_PROVIDER);
+                Location placeLocation = new Location(LocationManager.GPS_PROVIDER);
 
-                //placeLocation.setLatitude(MainActivity.locations.get(index).latitude);
-                //placeLocation.setLongitude(MainActivity.locations.get(index).longitude);
+                placeLocation.setLatitude(MainActivity.locations.get(index).latitude);
+                placeLocation.setLongitude(MainActivity.locations.get(index).longitude);
 
-                //centerMapOnLocation(placeLocation, MainActivity.places.get(index));
+                centerMapOnLocation(placeLocation, MainActivity.places.get(index));
             }
         }
     }
@@ -172,6 +172,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
             address += sdf.format(new Date());
         }
+
         mMap.addMarker(new MarkerOptions().position(latLng).title(address));
         
         MainActivity.locations.add(latLng);
@@ -192,7 +193,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             sharedPreferences.edit().putString("places", ObjectSerializer.serialize(MainActivity.places)).apply();
             sharedPreferences.edit().putString("lats", ObjectSerializer.serialize(latitudes)).apply();
-            sharedPreferences.edit().putString("Los", ObjectSerializer.serialize(longitudes)).apply();
+            sharedPreferences.edit().putString("lons", ObjectSerializer.serialize(longitudes)).apply();
 
         } catch(Exception e) {
             e.printStackTrace();
