@@ -1,0 +1,2 @@
+rootProject.name='WearListView'
+include ':app'

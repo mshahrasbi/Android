@@ -1,0 +1,2 @@
+rootProject.name='MyWatchFace'
+include ':app'

@@ -1,0 +1,3 @@
+rootProject.name='WatchAndPhoneFun'
+include ':mobile'
+include ':wear'
